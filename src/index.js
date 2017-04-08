@@ -29,6 +29,7 @@ function run(block, scope) {
       if(n instanceof String) return n;
       if(n instanceof Array) return n;
       if(n instanceof Object) return n;
+      if(n instanceof Function) return n;
       if(n === 'true') return true;
       if(n === 'false') return false;
       if(n === true || n === false) return n;
@@ -66,7 +67,10 @@ function run(block, scope) {
         return new Number(run(elem.childNodes, { ...scope }));
       case 'B':
         // boolean
-        return new Boolean(run(elem.childNodes, { ...scope }));
+        const bool = run(elem.childNodes, { ...scope });
+        if(bool === 'true') return new Boolean(true);
+        if(bool === 'false') return new Boolean(false);
+        return new Boolean(bool);
       case 'DEL':
         return new Boolean(!v(run(elem.childNodes, { ...scope })));
       case 'A':
@@ -108,22 +112,22 @@ function run(block, scope) {
         return sub;
       case 'SUP':
         // exponentiation
-        return new Number(Math.pow($_, run(elem.childNodes, { ...scope })));
+        return new Number(Math.pow(natural(v($_)), natural(v(run(elem.childNodes, { ...scope })))));
       case 'SMALL':
         // less than
-        return new Boolean(v($_) < v(run(elem.childNodes, { ...scope })));
+        return new Boolean(natural(v($_)) < natural(v(run(elem.childNodes, { ...scope }))));
       case 'SAMP':
         // equality
-        return new Boolean(v($_) === v(run(elem.childNodes, { ...scope })));
+        return new Boolean(natural(v($_)) === natural(v(run(elem.childNodes, { ...scope }))));
       case 'ARTICLE':
         // if else
         const b = run(elem.querySelector('header').childNodes, { ...scope });
         const ct = elem.querySelector('main');
         const cf = elem.querySelector('aside');
         if(b.valueOf()) {
-          return ct ? run(ct.childNodes, { ...scope }) : $_;
-        } else if(cf) {
-          return cf ? run(cf.childNodes, { ...scope }) : $_;
+          return ct ? v(run(ct.childNodes, { ...scope })) : $_;
+        } else {
+          return cf ? v(run(cf.childNodes, { ...scope })) : $_;
         }
       case 'INS':
         // function call
